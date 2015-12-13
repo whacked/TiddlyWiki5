@@ -23,7 +23,9 @@
     "tiddlywiki5",
     "wiki"
   ],
-  "dependencies": {},
+  "dependencies": {
+      "chokidar": "^1.4.1"
+  },
   "devDependencies": {},
   "bundleDependencies": [],
   "license": "BSD",
