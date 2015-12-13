@@ -36,8 +36,30 @@ var NavigatorWidget = function(parseTreeNode,options) {
 		{type: "tm-unfold-all-tiddlers", handler: "handleUnfoldAllTiddlersEvent"},
 		{type: "tm-rename-tiddler", handler: "handleRenameTiddlerEvent"}
 	]);
-};
 
+  if (typeof process !== "undefined" && process.versions['node-webkit']) {
+    // node webkit
+  } else {
+    // assume browser
+    
+    var ws = new WebSocket("ws://localhost:8081");
+    ws.onopen = function() {
+      console.log("%c WebSocket connected ", "color:green;border:1px solid green;border-radius:5px;");
+    }
+    ws.onmessage = function(evt) {
+      var data = JSON.parse(evt.data);
+      console.log("%c WS RECEIVED: %c " + data.message + " ", "background:black;color:white;font-weight:bold;border-radius:4px;", "color:white;background:none;border:1px solid green;");
+      switch(data.message) {
+      case "update_tiddlers":
+        $tw.wiki.addTiddlers(data.tiddlers);
+        break;
+      }
+    };
+    ws.onerror = function() {
+      console.warn("could not establish websocket");
+    }
+  }
+};
 /*
 Inherit from the base widget class
 */

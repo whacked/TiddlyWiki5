@@ -17,6 +17,13 @@ var fs = $tw.node ? require("fs") : null,
 	path = $tw.node ? require("path") : null,
 	chokidar = $tw.node ? require("chokidar") : null;
 
+	var ws = null;
+	try {
+		ws = $tw.node ? require("ws") : null;
+	} catch(e) {
+		console.warn("WebSocket could not be imported");
+	}
+
 function FileSystemAdaptor(options) {
 	var self = this;
 	this.wiki = options.wiki;
@@ -45,7 +52,26 @@ function FileSystemAdaptor(options) {
 			
 			var new_tiddlers = $tw.loadTiddlersFromFile(filepath).tiddlers
 			$tw.wiki.addTiddlers(new_tiddlers);
+      
+			// notify browser update
+			self.notify_browser_update_tiddlers(new_tiddlers);
 		});
+
+		self.ws_socket = null;
+		if(ws) {
+			console.log("starting WebSocket server...");
+			self.ws_server = new ws.Server({port: 8081});
+			self.ws_server.on("connection", function(ws) {
+				console.log("WebSocket connected.");
+				self.ws_socket = ws;
+			});
+		}
+		self.notify_browser_update_tiddlers = function(tiddlers) {
+			if(self.ws_socket) {
+				self.ws_socket.send(JSON.stringify({message: "update_tiddlers", tiddlers: tiddlers}));
+			}
+		};
+
 }
 
 FileSystemAdaptor.prototype.getTiddlerInfo = function(tiddler) {
