@@ -43,8 +43,8 @@ function FileSystemAdaptor(options) {
 				return; // handled within normal save cycle
 			}
 			
-			var new_tiddler = $tw.loadTiddlersFromFile(filepath).tiddlers[0];
-			$tw.wiki.addTiddler(new_tiddler);
+			var new_tiddlers = $tw.loadTiddlersFromFile(filepath).tiddlers
+			$tw.wiki.addTiddlers(new_tiddlers);
 		});
 }
 
