@@ -14,7 +14,8 @@ A sync adaptor module for synchronising with the local filesystem via node.js AP
 
 // Get a reference to the file system
 var fs = $tw.node ? require("fs") : null,
-	path = $tw.node ? require("path") : null;
+	path = $tw.node ? require("path") : null,
+	chokidar = $tw.node ? require("chokidar") : null;
 
 function FileSystemAdaptor(options) {
 	var self = this;
@@ -22,6 +23,29 @@ function FileSystemAdaptor(options) {
 	this.logger = new $tw.utils.Logger("FileSystem");
 	// Create the <wiki>/tiddlers folder if it doesn't exist
 	$tw.utils.createDirectory($tw.boot.wikiTiddlersPath);
+	
+	self.chokidar_ignore = null;
+	chokidar.watch($tw.boot.wikiTiddlersPath, {ignored: /[\/\\]\./})
+		.on("ready", function() {
+			self.chokidar_ignore = {};
+		})
+		.on("all", function(event, filepath) {
+			if(self.chokidar_ignore === null) {
+				return;
+			}
+			var tiddler_title = path.basename(filepath, ".tid");
+			
+			if(tiddler_title.match(/^Draft_of_/)) {
+				return; // skip drafts
+			} else if(!filepath.match(/\.tid$/)) {
+				return; // skip any non-tid file
+			} else if(self.chokidar_ignore[filepath]) {
+				return; // handled within normal save cycle
+			}
+			
+			var new_tiddler = $tw.loadTiddlersFromFile(filepath).tiddlers[0];
+			$tw.wiki.addTiddler(new_tiddler);
+		});
 }
 
 FileSystemAdaptor.prototype.getTiddlerInfo = function(tiddler) {
@@ -117,10 +141,15 @@ FileSystemAdaptor.prototype.saveTiddler = function(tiddler,callback) {
 		var template, content, encoding,
 			_finish = function() {
 				callback(null, {}, 0);
+        
+				delete self.chokidar_ignore[fileInfo.filepath];
 			};
 		if(err) {
 			return callback(err);
 		}
+    
+		self.chokidar_ignore[fileInfo.filepath] = tiddler.fields.title;
+    
 		var typeInfo = $tw.config.contentTypeInfo[fileInfo.type];
 		if(fileInfo.hasMetaFile || typeInfo.encoding === "base64") {
 			// Save the tiddler as a separate body and meta file
