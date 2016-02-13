@@ -48,7 +48,7 @@ var NavigatorWidget = function(parseTreeNode,options) {
     }
     ws.onmessage = function(evt) {
       var data = JSON.parse(evt.data);
-      console.log("%c WS RECEIVED: %c " + data.message + " ", "background:black;color:white;font-weight:bold;border-radius:4px;", "color:white;background:none;border:1px solid green;");
+      console.log("%c WS RECEIVED: %c " + data.message + " ", "background:black;color:white;font-weight:bold;border-radius:4px;", "color:gray;background:none;border:1px solid green;");
       switch(data.message) {
       case "update_tiddlers":
         $tw.wiki.addTiddlers(data.tiddlers);
