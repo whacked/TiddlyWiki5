@@ -881,6 +881,25 @@ $tw.Wiki = function(options) {
 		}
 	};
 
+	// HACK HACK HACK: normal addTiddler causes
+	// the file to get touched. this makes
+	// emacs unhappy on rapid saves ("file modified ... are you sure" confirmations)
+	// This version simply skips the enqueueTiddlerEvent,
+	// which pushes a "change" event into the event queue,
+	// which gets picked up by Syncer in core/modules/syncer.js
+	// and does some lastModificationTime updating
+	this.addTiddlerNoTouch = function(tiddler) {
+		if(!(tiddler instanceof $tw.Tiddler)) {
+			tiddler = new $tw.Tiddler(tiddler);
+		}
+		var title = tiddler.fields.title;
+		if(title) {
+			tiddlers[title] = tiddler;
+			this.clearCache(title);
+			this.clearGlobalCache();
+		}
+	};
+
 	// Delete a tiddler
 	this.deleteTiddler = function(title) {
 // Uncomment the following line for detailed logs of all tiddler deletions
