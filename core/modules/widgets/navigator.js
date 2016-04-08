@@ -50,8 +50,8 @@ var NavigatorWidget = function(parseTreeNode,options) {
       var data = JSON.parse(evt.data);
       console.log("%c WS RECEIVED: %c " + data.message + " ", "background:black;color:white;font-weight:bold;border-radius:4px;", "color:gray;background:none;border:1px solid green;");
       switch(data.message) {
-      case "update_tiddlers":
-        $tw.wiki.addTiddlers(data.tiddlers);
+      case "update_tiddler":
+        $tw.syncer.enqueueSyncTask({type:"load", title:data.title})
         break;
       }
     };
