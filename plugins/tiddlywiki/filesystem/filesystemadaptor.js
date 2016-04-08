@@ -51,8 +51,12 @@ function FileSystemAdaptor(options) {
 				return; // handled within normal save cycle
 			}
 			
-			$tw.wiki.addTiddlers(new_tiddlers);
 			var new_tiddlers = $tw.loadTiddlersFromFile(filepath).tiddlers;
+			// NOTE: this makes use of a hack in boot/boot.js; make sure
+			//       to review the logic on upstream merges.
+			$tw.wiki.addTiddlerNoTouch(new_tiddlers[0]);
+			// "standard-compatible" refresh method; this causes a file system "touch" event
+			// $tw.wiki.addTiddler(new_tiddlers[0]);
       
 			// notify browser update
 			self.notify_browser_update_tiddler(new_tiddlers[0].title);
