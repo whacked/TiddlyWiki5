@@ -22,6 +22,7 @@ var fs = $tw.node ? require("fs") : null,
 		ws = $tw.node ? require("ws") : null;
 	} catch(e) {
 		console.warn("WebSocket could not be imported");
+		console.warn(e.message);
 	}
 
 function FileSystemAdaptor(options) {
@@ -50,11 +51,11 @@ function FileSystemAdaptor(options) {
 				return; // handled within normal save cycle
 			}
 			
-			var new_tiddlers = $tw.loadTiddlersFromFile(filepath).tiddlers
 			$tw.wiki.addTiddlers(new_tiddlers);
+			var new_tiddlers = $tw.loadTiddlersFromFile(filepath).tiddlers;
       
 			// notify browser update
-			self.notify_browser_update_tiddlers(new_tiddlers);
+			self.notify_browser_update_tiddler(new_tiddlers[0].title);
 		});
 
 		self.ws_socket = null;
@@ -66,9 +67,9 @@ function FileSystemAdaptor(options) {
 				self.ws_socket = ws;
 			});
 		}
-		self.notify_browser_update_tiddlers = function(tiddlers) {
+		self.notify_browser_update_tiddler = function(tiddler_title) {
 			if(self.ws_socket) {
-				self.ws_socket.send(JSON.stringify({message: "update_tiddlers", tiddlers: tiddlers}));
+				self.ws_socket.send(JSON.stringify({message: "update_tiddler", title: tiddler_title}));
 			}
 		};
 
