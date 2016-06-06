@@ -275,6 +275,50 @@ var Command = function(params,commander,callback) {
 			}
 		}
 	});
+
+	this.server.addRoute({
+		method: "GET",
+		path: /^\/project\/(.+)$/,
+		handler: function(request,response,state) {
+			var searchPath = decodeURIComponent(state.params[0]),
+				fullPath = searchPath.replace(/^~/, process.env.HOME),
+				projectDir = path.dirname(fullPath);
+			if(fs.existsSync(projectDir)) {
+				var rtn = [];
+				var readmeText = null;
+				fs.readdirSync(projectDir).forEach(function (name) {
+					var filePath = path.join(projectDir, name);
+					var stat = fs.statSync(filePath);
+					if (stat.isFile()) {
+						rtn.push('<code class="filename">' + name + "</code>");
+						if(name == "README.org") {
+							readmeText = fs.readFileSync(filePath);
+						}
+					}
+				});
+
+				var out = '<div class="project-info">';
+				out += '<div class="search-path">' + searchPath + "</div>";
+				out += '<div class="file-list">' + rtn.join("\n") + "</div>";
+				if(readmeText) {
+					out += '<div class="readme">' + readmeText + "</div>";
+				}
+				out += "</div>";
+
+				response.writeHead(200, {"Content-Type": "application/json"});
+				response.end(out,"utf8");
+
+				// testing
+				// var resp = {
+				//		searchPath: searchPath
+				// };
+				// response.end(JSON.stringify(resp),"utf8");
+			} else {
+				response.writeHead(404);
+				response.end();
+			}
+		}
+	});
 };
 
 Command.prototype.execute = function() {
